@@ -391,6 +391,9 @@ st.button("Clear All and Start Again", on_click=reset_app)
 if st.session_state.get('reset_flag', False):
     del st.session_state['reset_flag']  # Remove the reset flag
     st.rerun()  # Trigger rerun of the app
+# Ensure radio button is not selected if reset flag is set
+if 'choice' in st.session_state:
+    del st.session_state['choice']  # Remove the radio button selection
     
 choice = st.radio("please select one from the following" , ['upload changes for 1 store' , 'upload changes for more than 1 store','change cluster mapping', 'reclustering'] , index = None )
  
