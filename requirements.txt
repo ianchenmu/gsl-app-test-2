@@ -1,0 +1,7 @@
+streamlit
+pandas
+openpyxl
+azure-storage-blob
+haversine
+pgeocode
+python-dotenv
