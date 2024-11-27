@@ -381,11 +381,8 @@ st.write("Hi, good day! What would you like to do today?")
 
 # Function to clear session state and set app to initial state
 def reset_app():
-    # Clear all keys in session state
     for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    
-    # Set reset flag
+        del st.session_state[key]  # Clear all session state keys
     st.session_state.reset_flag = True  # Set a flag to indicate reset
 
 # The "Clear All and Start Again" button at the bottom
@@ -394,11 +391,11 @@ st.button("Clear All and Start Again", on_click=reset_app)
 # Check if the reset flag is set and trigger rerun if needed
 if st.session_state.get('reset_flag', False):
     del st.session_state['reset_flag']  # Remove the reset flag
-    st.rerun()  # Trigger rerun of the app
+    st.experimental_rerun()  # Trigger rerun of the app
 
-# Ensure the radio button's session state is cleared when reset occurs
+# Clear the 'choice' session state so that no radio button is selected
 if 'choice' in st.session_state:
-    del st.session_state['choice']  # Remove the selected radio button choice
+    del st.session_state['choice']  # Remove any previous selection
     
 choice = st.radio("please select one from the following" , ['upload changes for 1 store' , 'upload changes for more than 1 store','change cluster mapping', 'reclustering'] , index = None )
  
