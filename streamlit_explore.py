@@ -378,6 +378,20 @@ dest_container = "container-01-rl-training-copy"
 st.image(logo_url, width=200) 
 st.title("Welcome to Store-Cluster Mapping Update System")
 st.write("Hi, good day! What would you like to do today?")
+# Function to clear session state and set app to initial state
+def reset_app():
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.session_state.reset_flag = True  # Set a flag to indicate reset
+
+# The "Clear All and Start Again" button at the bottom
+st.button("Clear All and Start Again", on_click=reset_app)
+
+# Check if the reset flag is set and trigger rerun if needed
+if st.session_state.get('reset_flag', False):
+    del st.session_state['reset_flag']  # Remove the reset flag
+    st.rerun()  # Trigger rerun of the app
+    
 choice = st.radio("please select one from the following" , ['upload changes for 1 store' , 'upload changes for more than 1 store','change cluster mapping', 'reclustering'] , index = None )
  
 if choice == 'upload changes for more than 1 store':
