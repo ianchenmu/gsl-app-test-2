@@ -381,106 +381,130 @@ st.title("Welcome to Store-Cluster Mapping Update System")
     
 st.write("Hi, what would you like to do today?")
 
+import streamlit as st
+from datetime import datetime
+import os
+
 # Function to clear session state and set app to initial state
 def reset_app():
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     st.session_state.reset_flag = True  # Set a flag to indicate reset
 
-# The "Clear All and Start Again" button at the bottom
+# Display a greeting message
+st.write("Hi, what would you like to do today?")
+
+# Display "Clear All and Start Again" button at the bottom
 st.button("Clear All and Start Again", on_click=reset_app)
 
 # Check if the reset flag is set and trigger rerun if needed
 if st.session_state.get('reset_flag', False):
     del st.session_state['reset_flag']  # Remove the reset flag
-    st.rerun()  # Trigger rerun of the app
-choice = st.radio("Please select one from the following" , ['Upload changes for 1 store' , 'Upload changes for more than 1 store','Change cluster mapping', 'Re-clustering'] , index = None )
- 
-if choice == 'upload changes for more than 1 store':
+    st.experimental_rerun()  # Trigger rerun of the app
+
+# Choice of action
+choice = st.radio("Please select one from the following", 
+                  ['Upload changes for 1 store', 
+                   'Upload changes for more than 1 store', 
+                   'Change cluster mapping', 
+                   'Re-clustering'], 
+                  index=None)
+
+# Upload changes for more than 1 store
+if choice == 'Upload changes for more than 1 store':
     choice = 1
     blob_name_multiple_stores = "sample_input.xlsx"
-    if st.button("click here to download the excel template") :
+    
+    if st.button("Click here to download the excel template"):
         blob_name_upload = 'demo_input_multiple_stores.csv'  ## change to a new file
         with open_download_file(connection_string, container_name, blob_name_multiple_stores) as file_xcl:
             btn = st.download_button(
-            label="bu_sample_format",
-            data=file_xcl,
-            file_name="input_format.xlsx"
-        )
+                label="bu_sample_format",
+                data=file_xcl,
+                file_name="input_format.xlsx"
+            )
         file_xcl.close()
             
-    uploaded_file = st.file_uploader("once done editing please upload the file here")
+    uploaded_file = st.file_uploader("Once done editing please upload the file here")
     st.session_state['file'] = uploaded_file
+
     if st.session_state['file'] is not None:
-       DATABRICKS_INSTANCE = os.getenv('DATABRICKS_INSTANCE')
-       DATABRICKS_TOKEN =  os.getenv('DATABRICKS_TOKEN2')
-       #DATABRICKS_INSTANCE = 'https://adb-8165306836189773.13.azuredatabricks.net'
-       #DATABRICKS_TOKEN = 'dapi7fbdd0c908acb1e7309eb6531446ab25'
-       DATABRICKS_JOB_ID = '631136514737024'
-       blob_name_upload = 'demo_input.csv'
-       ask_confirmation(st.session_state['file'], blob_name_upload, DATABRICKS_INSTANCE, DATABRICKS_TOKEN, DATABRICKS_JOB_ID,source_container, dest_container, connection_string, choice, choice_dict = '')
+        DATABRICKS_INSTANCE = os.getenv('DATABRICKS_INSTANCE')
+        DATABRICKS_TOKEN = os.getenv('DATABRICKS_TOKEN2')
+        DATABRICKS_JOB_ID = '631136514737024'
+        blob_name_upload = 'demo_input.csv'
         
-elif choice == 'upload changes for 1 store' :
-    #DATABRICKS_INSTANCE = 'https://adb-8165306836189773.13.azuredatabricks.net'
-    #DATABRICKS_TOKEN = 'dapi7fbdd0c908acb1e7309eb6531446ab25'
+        ask_confirmation(st.session_state['file'], blob_name_upload, DATABRICKS_INSTANCE, DATABRICKS_TOKEN, 
+                         DATABRICKS_JOB_ID, source_container, dest_container, connection_string, choice, choice_dict='')
+
+# Upload changes for 1 store
+elif choice == 'Upload changes for 1 store':
     DATABRICKS_INSTANCE = os.getenv('DATABRICKS_INSTANCE')
-    DATABRICKS_TOKEN =  os.getenv('DATABRICKS_TOKEN2')
+    DATABRICKS_TOKEN = os.getenv('DATABRICKS_TOKEN2')
     DATABRICKS_JOB_ID = '631136514737024'
     blob_name_upload = "change_upload_1_store.csv"
-    email  = st.text_input("enter your email", value = "")
-    bu = st.selectbox("What is the business unit of the store?" , ('Florida', 'Coastal Carolina', 'Southeast', 'Rocky Mountain', 'Gulf Coast', 
-                            'West Coast', 'Midwest', 'Texas', 'South Atlantic', 'Grand Canyon', 
-                            'Great Lakes', 'Heartland', 'Central Canada', 'Western Division', 'Eastern Canada') , index = None)
-    site_id = st.text_input("enter the site id" , value = "")
-    close_status = st.selectbox("What happened to the store?" ,("The store is permanently closed" , "A new store is opened (NTI)") , index = None)
-
-    choice_dict = { 'email' : [email] ,   'bu' : [bu] , 'What is the site number' : [site_id] , 'What happened to the store?' : [close_status]}
-    st.write("once you have entered the details, click on the submit button to submit")
-    if 'submit_info' not in st.session_state:
-        st.session_state.stage_submit  = 0
-    def set_stage_submit(stage_submit):
-            st.session_state.stage_submit = stage_submit
     
-    st.button(label = "Click here to submit store details" ,key = 'submit_info',  on_click = set_stage_submit, args = (1,))
+    email = st.text_input("Enter your email", value="")
+    bu = st.selectbox("What is the business unit of the store?", 
+                      ['Florida', 'Coastal Carolina', 'Southeast', 'Rocky Mountain', 'Gulf Coast', 
+                       'West Coast', 'Midwest', 'Texas', 'South Atlantic', 'Grand Canyon', 
+                       'Great Lakes', 'Heartland', 'Central Canada', 'Western Division', 'Eastern Canada'], 
+                      index=None)
+    site_id = st.text_input("Enter the site id", value="")
+    close_status = st.selectbox("What happened to the store?", 
+                                ["The store is permanently closed", "A new store is opened (NTI)"], 
+                                index=None)
+
+    choice_dict = {'email': [email], 'bu': [bu], 'site_id': [site_id], 'close_status': [close_status]}
+    st.write("Once you have entered the details, click on the submit button to submit")
+
+    # Managing stages for submission and confirmation
+    if 'submit_info' not in st.session_state:
+        st.session_state.stage_submit = 0
+    
+    def set_stage_submit(stage_submit):
+        st.session_state.stage_submit = stage_submit
+    
+    st.button(label="Click here to submit store details", key='submit_info', on_click=set_stage_submit, args=(1,))
     st.write(st.session_state.stage_submit)
-    if st.session_state.stage_submit >0 :
-        st.write("inside if loop")
+
+    if st.session_state.stage_submit > 0:
         if 'stage' not in st.session_state:
             st.session_state.stage = 0
+        
         def set_stage(stage):
             st.session_state.stage = stage
         
         st.warning("Are you sure you want to make changes to the store?")
-        st.button("Yes", key = 'confirm', on_click = set_stage, args = (1,))
-        st.button("No", key = 'confirm_deny', on_click = set_stage, args = (0,))
-        # st.write(st.session_state.submit_info)
-        if st.session_state.stage >  0:
-                st.warning("Reconfirming, Are you sure you want to make changes to the store?, changes cannot be undone")
-                st.button("Yes", key = 'reconfirm', on_click = set_stage, args = (2,))
-                st.button("No", key = 'reconfirm_deny' , on_click = set_stage , args = (0,))
-        #         #st.write(st.session_state.stage)
-                if st.session_state.stage > 1:
-                    st.write("inside if loop no 2" , st.session_state.stage)
-                    df = pd.DataFrame(choice_dict)
-                    delta_table_bool= update_delta_table(df, "changes requested for a single store")
-                    if delta_table_bool:
-                        upload_blob(connection_string, container_name,  blob_name_upload , df)
-                        call_update_clusters(DATABRICKS_INSTANCE, DATABRICKS_TOKEN, DATABRICKS_JOB_ID , blob_name_upload, source_container, dest_container, connection_string, choice=2 ,choice_dict = ""  )
-    
+        st.button("Yes", key='confirm', on_click=set_stage, args=(1,))
+        st.button("No", key='confirm_deny', on_click=set_stage, args=(0,))
 
-    
-elif (choice == 'change cluster mapping') or (choice == 'reclustering'):
-    if choice == 'change cluster mapping':
-        if st.button("click here to download the excel template") :
+        if st.session_state.stage > 0:
+            st.warning("Reconfirming: Are you sure you want to make changes to the store? Changes cannot be undone.")
+            st.button("Yes", key='reconfirm', on_click=set_stage, args=(2,))
+            st.button("No", key='reconfirm_deny', on_click=set_stage, args=(0,))
+        
+        if st.session_state.stage > 1:
+            df = pd.DataFrame(choice_dict)
+            delta_table_bool = update_delta_table(df, "changes requested for a single store")
+            if delta_table_bool:
+                upload_blob(connection_string, container_name, blob_name_upload, df)
+                call_update_clusters(DATABRICKS_INSTANCE, DATABRICKS_TOKEN, DATABRICKS_JOB_ID, 
+                                     blob_name_upload, source_container, dest_container, connection_string, choice=2, choice_dict='')
+
+# Change cluster mapping or re-clustering
+elif choice == 'Change cluster mapping' or choice == 'Re-clustering':
+    if choice == 'Change cluster mapping':
+        if st.button("Click here to download the excel template"):
             blob_name_upload_cluster = 'cluster_mapping.xlsx'
             blob_name = "sample_input_cluster_mapping.xlsx"
             with open_download_file(connection_string, container_name, blob_name_upload_cluster) as file_xcl:
                 btn = st.download_button(
-                label="Download file",
-                data=file_xcl,
-                file_name="cluster_mapping.xlsx"
-            )
-        uploaded_file = st.file_uploader("once done editing please upload the file here")
+                    label="Download file",
+                    data=file_xcl,
+                    file_name="cluster_mapping.xlsx"
+                )
+        uploaded_file = st.file_uploader("Once done editing please upload the file here")
         blob_name_upload = 'change_cluster_mapping.csv'
     else:
         uploaded_file = st.file_uploader("**Please upload the reclustering file here**")
@@ -489,21 +513,8 @@ elif (choice == 'change cluster mapping') or (choice == 'reclustering'):
     st.session_state['file_cluster'] = uploaded_file
     if st.session_state['file_cluster'] is not None:
         DATABRICKS_INSTANCE = os.getenv('DATABRICKS_INSTANCE')
-        DATABRICKS_TOKEN =  os.getenv('DATABRICKS_TOKEN2')
-        # DATABRICKS_INSTANCE = 'https://adb-8165306836189773.13.azuredatabricks.net/'
-        # DATABRICKS_TOKEN = 'dapi7fbdd0c908acb1e7309eb6531446ab25'
+        DATABRICKS_TOKEN = os.getenv('DATABRICKS_TOKEN2')
         DATABRICKS_JOB_ID = '385410668511049'
         
-        ask_confirmation(st.session_state['file_cluster'], blob_name_upload, DATABRICKS_INSTANCE, DATABRICKS_TOKEN, DATABRICKS_JOB_ID,source_container, dest_container, connection_string, choice = 2, choice_dict = '')
-        
-# elif choice == 'reclustering':
-#     uploaded_file_recluster = st.file_uploader("please upload the reclustering file here:")
-#     st.session_state.recluster_file = uploaded_file_recluster
-#     if st.session_state.recluster_file is not None:
-#          df = pd.read_excel(st.session_state.recluster_file)
-#          st.write(df)
-
-
-
-
-        
+        ask_confirmation(st.session_state['file_cluster'], blob_name_upload, DATABRICKS_INSTANCE, DATABRICKS_TOKEN, 
+                         DATABRICKS_JOB_ID, source_container, dest_container, connection_string, choice=2, choice_dict='')
