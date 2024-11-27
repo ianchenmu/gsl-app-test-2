@@ -391,7 +391,7 @@ st.button("Clear All and Start Again", on_click=reset_app)
 # Check if the reset flag is set and trigger rerun if needed
 if st.session_state.get('reset_flag', False):
     del st.session_state['reset_flag']  # Remove the reset flag
-    st.experimental_rerun()  # Trigger rerun of the app
+    st.rerun()  # Trigger rerun of the app
 
 # Clear the 'choice' session state so that no radio button is selected
 if 'choice' in st.session_state:
